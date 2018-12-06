@@ -1,2 +1,4 @@
 # orgon
-Org On! Flow on like orgonite energy.
+
+Motto: Org On! Flow on like the orgone energy.
+
