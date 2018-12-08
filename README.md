@@ -1,4 +1,3 @@
-# orgon
+# Goings
 
-Motto: Org On! Flow on like the orgone energy.
-
+Goings is my journey into the isomorphic Go space.
