@@ -4,7 +4,7 @@ import (
 	"time"
 )
 
-// Project is the project model.
+// Project is the model of a project.
 type Project struct {
 	ID          string
 	Title       string

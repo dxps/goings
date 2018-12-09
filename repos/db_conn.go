@@ -7,6 +7,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// RepoConnection is providing a database connection setup:
+// the connection itself, the state.
 type RepoConnection struct {
 	DbConnection *sql.DB
 }
@@ -30,6 +32,7 @@ func NewSqliteConnection() *RepoConnection {
 
 }
 
+// UninitSqliteConnection should be called in a graceful shutdown case.
 func UninitSqliteConnection() {
 	sqliteConn.DbConnection.Close()
 	log.Println("SQLite database connection closed.")
