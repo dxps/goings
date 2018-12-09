@@ -3,14 +3,15 @@
 Goings is my journey into the isomorphic Go space.
 
 
-----
+## Run
 
-#### Todos
+Prereqs:
+- Go 1.x
+- resolve the dependencies by running `go get` in the project location
 
-1. Consider [sqlboiler](https://github.com/volatiletech/sqlboiler) in the future.
-   Installed:
-    ```shell
-    go get -u -t github.com/volatiletech/sqlboiler
-    go get -u github.com/volatiletech/sqlboiler-sqlite3
-    ```
+Start the app:
+- in dev mode using `go run goings-app.go`.
+
+
+
 
