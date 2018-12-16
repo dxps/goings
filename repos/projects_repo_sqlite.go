@@ -49,7 +49,9 @@ func (repo *ProjectsRepoSqlite) GetProjects() []*models.Project {
 		panic(err)
 	}
 	defer rows.Close()
-	var result []*models.Project
+
+	// var result []*models.Project
+	result := make(models.Projects, 0)
 	for rows.Next() {
 		item := models.Project{}
 		err2 := rows.Scan(&item.ID, &item.Title, &item.Description,

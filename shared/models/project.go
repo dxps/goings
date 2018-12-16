@@ -13,3 +13,6 @@ type Project struct {
 	StartTime   time.Time
 	State       string
 }
+
+// Projects is a slice of 0-N references to Project objects.
+type Projects []*Project
