@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	// register the SQLite driver
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -26,7 +27,7 @@ func NewSqliteConnection() *RepoConnection {
 		log.Fatal(err)
 	}
 	repoConn := RepoConnection{DbConnection: conn}
-	log.Printf("Connected to SQLite database ('%v').\n", sqliteDB)
+	log.Printf("(repos) NewSqliteConnection > Connected to SQLite database ('%v').\n", sqliteDB)
 	sqliteConn = &repoConn
 	return &repoConn
 

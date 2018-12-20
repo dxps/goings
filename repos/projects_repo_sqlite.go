@@ -1,6 +1,8 @@
 package repos
 
 import (
+	"log"
+
 	"github.com/vision8tech/goings/shared/models"
 )
 
@@ -23,7 +25,7 @@ type ProjectsRepoSqlite struct {
 func (repo *ProjectsRepoSqlite) Init(conn *RepoConnection) {
 
 	repo.conn = conn
-	// table setup
+	// create table, if not already exists
 	projectsTableStmt := `CREATE TABLE IF NOT EXISTS projects(
 		id TEXT NOT NULL PRIMARY KEY,
 		title TEXT,
@@ -36,6 +38,7 @@ func (repo *ProjectsRepoSqlite) Init(conn *RepoConnection) {
 	if err != nil {
 		panic(err)
 	}
+	log.Printf("[ProjectsRepoSqlite] Init(conn) > %d projects exist.", len(repo.GetProjects()))
 
 }
 

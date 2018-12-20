@@ -1,6 +1,6 @@
 # Goings
 
-Goings is my journey into the isomorphic Go space.
+Goings is my journey into the _isomorphic Go_ space.
 
 
 ## Run
