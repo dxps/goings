@@ -84,8 +84,8 @@ func registerRoutes(env *common.Env, r *mux.Router) {
 
 	// Client-side triggered request handlers.
 	if appMode != "production" {
-		r.Handle("/js/ui.js", isokit.GopherjsScriptHandlerExt(appRoot, "/ui/ui.js")).Methods("GET")
-		r.Handle("/js/ui.js.map", isokit.GopherjsScriptMapHandlerExt(appRoot, "/ui/ui.js.map")).Methods("GET")
+		r.Handle("/js/ui.js", handlers.GopherjsScriptHandlerExt(appRoot, "/ui/ui.js")).Methods("GET")
+		r.Handle("/js/ui.js.map", handlers.GopherjsScriptMapHandlerExt(appRoot, "/ui/ui.js.map")).Methods("GET")
 	}
 
 	// Register handler for the delivery of the template bundle.
