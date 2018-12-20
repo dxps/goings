@@ -27,7 +27,9 @@ func init() {
 	appRoot = os.Getenv("GOINGS_APP_ROOT")
 	appServerPort = os.Getenv("GOINGS_APP_PORT")
 	staticAssetsPath = appRoot + "/static"
+	log.SetFlags(log.Ldate | log.Lmicroseconds)
 	log.Printf("[main] init > Env vars: GOINGS_APP_ROOT=%s GOINGS_APP_PORT=%s", appRoot, appServerPort)
+
 }
 
 // Initialization of the repositories.
@@ -59,8 +61,6 @@ func initTemplateSet(env *common.Env, generateStaticAssets bool) {
 }
 
 func main() {
-
-	log.SetFlags(log.Ldate | log.Lmicroseconds)
 
 	env := common.Env{}
 	initRepos(&env)

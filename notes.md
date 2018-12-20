@@ -9,4 +9,6 @@
         supportedExtensions := map[string]int{".go": 1, ".html": 1, ".tmpl": 1, ".gohtml": 1}
    ```
    Then just ran `go install` to have it in `$GOPATH/bin`, which is part of my `PATH` env var, so I can use it anywhere.
+   
+   _Optional:_ In my (OCS tendency) case, I added a new line (`\n`) marker to the line that logs the reloading action, as such: `Instant KickStart Applied ....\n`
 

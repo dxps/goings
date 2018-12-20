@@ -1,13 +1,10 @@
 <!doctype html>
 <html>
-	{{ template "parts/header_part" . }}
+{{ template "parts/header_part" . }}
 
-		<div id="primaryContent" class="pageContent">
-			{{ template "pagecontent" . }}
-		</div>
+	<div id="primaryContent" class="pageContent">
+		{{ template "pagecontent" . }}
+	</div>
 
-		<div id="chatboxContainer" class="containerPulse">
-		</div>
-
-	{{ template "parts/footer_part" . }}
+{{ template "parts/footer_part" . }}
 </html>
