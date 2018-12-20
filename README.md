@@ -9,10 +9,10 @@ Prereqs:
 - Go 1.x
 - resolve the dependencies by running `go get` in the project location
 
+
 Run the app:
-- in dev mode using `go run goings-app.go`
-    - as currently it is using two environment variables for the initial setup, use as an example:
-      `GOINGS_APP_ROOT=/files/dev/go/src/github.com/vision8tech/goings GOINGS_APP_PORT=8080 go run goings-app.go`
+- in dev mode using `./scripts/run-dev.sh` in the project location
+
 
 ## Usage
 
