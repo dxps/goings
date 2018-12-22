@@ -9,9 +9,11 @@ import (
 	"go.isomorphicgo.org/go/isokit"
 
 	"github.com/gorilla/mux"
-	"github.com/vision8tech/goings/api/endpoints"
+
 	"github.com/vision8tech/goings/common"
-	"github.com/vision8tech/goings/handlers"
+	"github.com/vision8tech/goings/handlers/api"
+	"github.com/vision8tech/goings/handlers/pages"
+	"github.com/vision8tech/goings/handlers/ui"
 	"github.com/vision8tech/goings/repos"
 	"github.com/vision8tech/goings/shared/templatefuncs"
 )
@@ -69,12 +71,7 @@ func main() {
 	router := mux.NewRouter()
 	registerRoutes(&env, router)
 
-	// Register Request Handler for Static Assetcs
-	fs := http.FileServer(http.Dir(staticAssetsPath))
-	http.Handle("/static/", http.StripPrefix("/static", fs))
-
 	http.Handle("/", router)
-
 	http.ListenAndServe(":"+appServerPort, nil)
 
 }
@@ -82,20 +79,23 @@ func main() {
 // registerRoutes is responsible for registering the server-side request handlers
 func registerRoutes(env *common.Env, r *mux.Router) {
 
-	// Client-side triggered request handlers.
-	if appMode != "production" {
-		r.Handle("/js/ui.js", handlers.GopherjsScriptHandlerExt(appRoot, "/ui/ui.js")).Methods("GET")
-		r.Handle("/js/ui.js.map", handlers.GopherjsScriptMapHandlerExt(appRoot, "/ui/ui.js.map")).Methods("GET")
-	}
+	// Standard/Initial requests handlers (for pages, not views)
 
-	// Register handler for the delivery of the template bundle.
-	r.Handle("/template-bundle", handlers.TemplateBundleHandler(env)).Methods("POST")
+	r.Handle("/", pages.IndexPageHandler(env)).Methods("GET")
 
-	// REST API Endpoints
-	r.Handle("/api/projects", endpoints.GetProjectsAPIEndpoint(env)).Methods("GET")
+	// UI (client-side) triggered request handlers
 
-	// Back-end Pages
-	r.Handle("/", handlers.IndexHandler(env)).Methods("GET")
+	r.Handle("/template-bundle", ui.TemplateBundleHandler(env)).Methods("POST")
+
+	// API request handlers
+
+	r.Handle("/api/projects", api.GetProjectsAPIEndpoint(env)).Methods("GET")
+
+	// ----------------------------------------------------------------------
+
+	// static assets requests handlers
+	fs := http.FileServer(http.Dir(staticAssetsPath))
+	http.Handle("/static/", http.StripPrefix("/static", fs))
 
 	log.Println("[main] registerRoutes > Routes registered.")
 

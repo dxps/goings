@@ -1,24 +1,53 @@
 package repos
 
 import (
+	"database/sql"
 	"log"
 
 	"github.com/vision8tech/goings/shared/models"
+
+	// register the SQLite driver
+	_ "github.com/mattn/go-sqlite3"
 )
 
-// NewSqliteProjectRepo is creating a new Sqlite based
-// project repository instance.
+const sqliteDB = "./goings.sqlitedb"
+
+// locally reused for clean shutdown (uninit)
+var sqliteConn *RepoConnection
+
+// NewSqliteConnection creates a connection to SQLite database.
+func NewSqliteConnection() *RepoConnection {
+
+	conn, err := sql.Open("sqlite3", sqliteDB)
+	if err != nil {
+		log.Fatal(err)
+	}
+	repoConn := RepoConnection{DbConn: conn}
+	log.Printf("(repos) NewSqliteConnection > Connected to SQLite database ('%v').\n", sqliteDB)
+	sqliteConn = &repoConn
+	return &repoConn
+
+}
+
+// UninitSqliteConnection should be called in a graceful shutdown case.
+func UninitSqliteConnection() {
+	sqliteConn.DbConn.Close()
+	log.Println("SQLite database connection closed.")
+}
+
+// ProjectsRepoSqlite is a Sqlite based implementation of ProjectsRepo.
+type ProjectsRepoSqlite struct {
+	conn *RepoConnection
+}
+
+// NewSqliteProjectRepo is creating an SQLite based project repository instance.
 func NewSqliteProjectRepo() *ProjectsRepoSqlite {
 
 	sqliteConn := NewSqliteConnection()
 	projRepo := &ProjectsRepoSqlite{}
 	projRepo.Init(sqliteConn)
 	return projRepo
-}
 
-// ProjectsRepoSqlite is a Sqlite based implementation of ProjectsRepo.
-type ProjectsRepoSqlite struct {
-	conn *RepoConnection
 }
 
 // Init is used for initializing the repo.
@@ -34,7 +63,7 @@ func (repo *ProjectsRepoSqlite) Init(conn *RepoConnection) {
 		start_time TEXT,
 		state TINYINT
 	);`
-	_, err := repo.conn.DbConnection.Exec(projectsTableStmt)
+	_, err := repo.conn.DbConn.Exec(projectsTableStmt)
 	if err != nil {
 		panic(err)
 	}
@@ -47,7 +76,7 @@ func (repo *ProjectsRepoSqlite) GetProjects() []*models.Project {
 
 	getAllProjectsStmt := `SELECT id, title, description, image_uri, start_time, state 
 		FROM projects`
-	rows, err := repo.conn.DbConnection.Query(getAllProjectsStmt)
+	rows, err := repo.conn.DbConn.Query(getAllProjectsStmt)
 	if err != nil {
 		panic(err)
 	}
@@ -66,4 +95,12 @@ func (repo *ProjectsRepoSqlite) GetProjects() []*models.Project {
 	}
 	return result
 
+}
+
+// StoreProject stores a new project into the repository.
+func (repo *ProjectsRepoSqlite) StoreProject(project *models.Project) {
+
+	insertStmt := `INSERT INTO projects(id, title, description, image_uri, start_time, state)
+	 VALUES($1, $2, $3, $4, $5, $6)`
+	repo.conn.DbConn.QueryRow(insertStmt)
 }

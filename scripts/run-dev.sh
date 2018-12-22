@@ -9,4 +9,4 @@
 export GOINGS_APP_ROOT=$(pwd)
 export GOINGS_APP_PORT=8080
 
-kick -appPath=${GOINGS_APP_ROOT} -gopherjsAppPath=${GOINGS_APP_ROOT}/ui -mainSourceFile=goings-app.go
+kick -appPath=${GOINGS_APP_ROOT} -gopherjsAppPath=${GOINGS_APP_ROOT}/ui -mainSourceFile=goings.go

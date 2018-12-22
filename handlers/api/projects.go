@@ -1,4 +1,4 @@
-package endpoints
+package api
 
 import (
 	"encoding/json"
@@ -8,7 +8,7 @@ import (
 	"github.com/vision8tech/goings/common"
 )
 
-// GetProjectsAPIEndpoint sets up the "/api/projects" endpoint.
+// GetProjectsAPIEndpoint returns the handler for "/api/projects" endpoint.
 func GetProjectsAPIEndpoint(env *common.Env) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

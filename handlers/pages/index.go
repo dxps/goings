@@ -1,4 +1,4 @@
-package handlers
+package pages
 
 import (
 	"net/http"
@@ -8,8 +8,8 @@ import (
 	"go.isomorphicgo.org/go/isokit"
 )
 
-// IndexHandler is the handler for the GET "/" requests.
-func IndexHandler(env *common.Env) http.Handler {
+// IndexPageHandler is the handler for the GET "/" requests.
+func IndexPageHandler(env *common.Env) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		templateData := templatedata.Index{PageTitle: "Goings"}

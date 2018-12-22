@@ -1,6 +1,10 @@
-package handlers
+package ui
 
 import "net/http"
+
+// ===========================================================
+// ==          GopherJS specific requests handlers          ==
+// ===========================================================
 
 // GopherjsScriptHandlerExt is returning the handler for requests getting the main GopherJS file.
 func GopherjsScriptHandlerExt(webAppRoot string, gopherjsMainScriptFile string) http.Handler {

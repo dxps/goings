@@ -1,4 +1,4 @@
-package handlers
+package ui
 
 import (
 	"bytes"
