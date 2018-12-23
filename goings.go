@@ -30,7 +30,7 @@ func init() {
 	appServerPort = os.Getenv("GOINGS_APP_PORT")
 	staticAssetsPath = appRoot + "/static"
 	log.SetFlags(log.Ldate | log.Lmicroseconds)
-	log.Printf("[main] init > Env vars: GOINGS_APP_ROOT=%s GOINGS_APP_PORT=%s", appRoot, appServerPort)
+	log.Printf("main.init > Env vars: GOINGS_APP_ROOT=%s GOINGS_APP_PORT=%s", appRoot, appServerPort)
 
 }
 
@@ -90,6 +90,7 @@ func registerRoutes(env *common.Env, r *mux.Router) {
 	// API request handlers
 
 	r.Handle("/api/projects", api.GetProjectsAPIEndpoint(env)).Methods("GET")
+	r.Handle("/api/projects", api.PostProjectAPIEndpoint(env)).Methods("POST")
 
 	// ----------------------------------------------------------------------
 
@@ -97,6 +98,6 @@ func registerRoutes(env *common.Env, r *mux.Router) {
 	fs := http.FileServer(http.Dir(staticAssetsPath))
 	http.Handle("/static/", http.StripPrefix("/static", fs))
 
-	log.Println("[main] registerRoutes > Routes registered.")
+	log.Println("main.registerRoutes > Routes registered.")
 
 }

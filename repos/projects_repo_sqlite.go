@@ -3,6 +3,7 @@ package repos
 import (
 	"database/sql"
 	"log"
+	"time"
 
 	"github.com/vision8tech/goings/shared/models"
 
@@ -23,7 +24,7 @@ func NewSqliteConnection() *RepoConnection {
 		log.Fatal(err)
 	}
 	repoConn := RepoConnection{DbConn: conn}
-	log.Printf("(repos) NewSqliteConnection > Connected to SQLite database ('%v').\n", sqliteDB)
+	log.Printf("NewSqliteConnection > Connected to SQLite database ('%v').\n", sqliteDB)
 	sqliteConn = &repoConn
 	return &repoConn
 
@@ -67,12 +68,12 @@ func (repo *ProjectsRepoSqlite) Init(conn *RepoConnection) {
 	if err != nil {
 		panic(err)
 	}
-	log.Printf("[ProjectsRepoSqlite] Init(conn) > %d projects exist.", len(repo.GetProjects()))
+	log.Printf("ProjectsRepoSqlite.Init > %d projects exist.", len(repo.RetrieveProjects()))
 
 }
 
 // GetProjects returns the list (slice) of existing projects.
-func (repo *ProjectsRepoSqlite) GetProjects() []*models.Project {
+func (repo *ProjectsRepoSqlite) RetrieveProjects() []*models.Project {
 
 	getAllProjectsStmt := `SELECT id, title, description, image_uri, start_time, state 
 		FROM projects`
@@ -86,11 +87,13 @@ func (repo *ProjectsRepoSqlite) GetProjects() []*models.Project {
 	result := make(models.Projects, 0)
 	for rows.Next() {
 		item := models.Project{}
+		var startTime string
 		err2 := rows.Scan(&item.ID, &item.Title, &item.Description,
-			&item.ImageURI, &item.StartTime, &item.State)
+			&item.ImageURI, &startTime, &item.State)
 		if err2 != nil {
 			panic(err2)
 		}
+		item.StartTime, _ = time.Parse(time.RFC3339, startTime)
 		result = append(result, &item)
 	}
 	return result
@@ -98,9 +101,14 @@ func (repo *ProjectsRepoSqlite) GetProjects() []*models.Project {
 }
 
 // StoreProject stores a new project into the repository.
-func (repo *ProjectsRepoSqlite) StoreProject(project *models.Project) {
+func (repo *ProjectsRepoSqlite) StoreProject(p *models.Project) {
 
 	insertStmt := `INSERT INTO projects(id, title, description, image_uri, start_time, state)
-	 VALUES($1, $2, $3, $4, $5, $6)`
-	repo.conn.DbConn.QueryRow(insertStmt)
+	 VALUES(?,?,?,?,?,?)`
+	stmt, _ := repo.conn.DbConn.Prepare(insertStmt)
+	_, err := stmt.Exec(p.ID, p.Title, p.Description, p.ImageURI, p.StartTime.Format(time.RFC3339), p.State)
+	if err != nil {
+		log.Printf("ProjectsRepoSqlite.StoreProject > Error: '%s'\n", err)
+	}
+
 }
