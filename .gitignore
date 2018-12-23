@@ -18,6 +18,7 @@ goings.sqlitedb
 ## IDEs related project artifacts
 .vscode
 .idea
+*.iml
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

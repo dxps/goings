@@ -90,7 +90,8 @@ func registerRoutes(env *common.Env, r *mux.Router) {
 	// API request handlers
 
 	r.Handle("/api/projects", api.GetProjectsAPIEndpoint(env)).Methods("GET")
-	r.Handle("/api/projects", api.PostProjectAPIEndpoint(env)).Methods("POST")
+	r.Handle("/api/projects/{id}", api.GetProjectByIdAPIEndpoint(env)).Methods("GET")
+	r.Handle("/api/projects", api.SubmitProjectAPIEndpoint(env)).Methods("POST")
 
 	// ----------------------------------------------------------------------
 

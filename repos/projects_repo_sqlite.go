@@ -11,6 +11,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// path to the SQLite database file
 const sqliteDB = "./goings.sqlitedb"
 
 // locally reused for clean shutdown (uninit)
@@ -32,7 +33,7 @@ func NewSqliteConnection() *RepoConnection {
 
 // UninitSqliteConnection should be called in a graceful shutdown case.
 func UninitSqliteConnection() {
-	sqliteConn.DbConn.Close()
+	_ = sqliteConn.DbConn.Close()
 	log.Println("SQLite database connection closed.")
 }
 
@@ -66,37 +67,67 @@ func (repo *ProjectsRepoSqlite) Init(conn *RepoConnection) {
 	);`
 	_, err := repo.conn.DbConn.Exec(projectsTableStmt)
 	if err != nil {
+		log.Printf("ProjectsRepoSqlite.Init > Error creating the projects table: %s\n", err)
 		panic(err)
 	}
-	log.Printf("ProjectsRepoSqlite.Init > %d projects exist.", len(repo.RetrieveProjects()))
+	projects, err := repo.RetrieveProjects()
+	if err != nil {
+		log.Printf("ProjectsRepoSqlite.Init > Error counting the projects: %s\n", err)
+	}
+	log.Printf("ProjectsRepoSqlite.Init > %d projects exist.", len(projects))
 
 }
 
 // GetProjects returns the list (slice) of existing projects.
-func (repo *ProjectsRepoSqlite) RetrieveProjects() []*models.Project {
+func (repo *ProjectsRepoSqlite) RetrieveProjects() ([]*models.Project, error) {
 
 	getAllProjectsStmt := `SELECT id, title, description, image_uri, start_time, state 
 		FROM projects`
 	rows, err := repo.conn.DbConn.Query(getAllProjectsStmt)
 	if err != nil {
-		panic(err)
+		log.Printf("RetrieveProjects > Error retrieving data: %s\n", err)
+		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	// var result []*models.Project
 	result := make(models.Projects, 0)
 	for rows.Next() {
 		item := models.Project{}
 		var startTime string
-		err2 := rows.Scan(&item.ID, &item.Title, &item.Description,
-			&item.ImageURI, &startTime, &item.State)
+		err2 := rows.Scan(&item.ID, &item.Title, &item.Description, &item.ImageURI, &startTime, &item.State)
 		if err2 != nil {
 			panic(err2)
 		}
 		item.StartTime, _ = time.Parse(time.RFC3339, startTime)
 		result = append(result, &item)
 	}
-	return result
+	return result, nil
+
+}
+
+// RetrieveProjectByID returns a project by id.
+func (repo *ProjectsRepoSqlite) RetrieveProjectByID(id string) (*models.Project, error) {
+
+	var proj = models.Project{}
+	rows, err := repo.conn.DbConn.Query(`SELECT id, title, description, image_uri, start_time, state
+		FROM projects WHERE id=?`, id)
+	defer func() { _ = rows.Close() }()
+	if err != nil {
+		log.Printf("RetrieveProjectByID > Error retrieving data: %s\n", err)
+		return nil, err
+	}
+	if rows.Next() {
+		var startTime string
+		err = rows.Scan(&proj.ID, &proj.Title, &proj.Description, &proj.ImageURI, &startTime, &proj.State)
+		if err != nil {
+			log.Printf("RetrieveProjectByID > Error scanning the row: %s\n", err)
+			return &proj, err
+		}
+		proj.StartTime, _ = time.Parse(time.RFC3339, startTime)
+		return &proj, nil
+	}
+	return nil, nil
 
 }
 

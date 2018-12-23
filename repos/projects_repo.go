@@ -8,6 +8,10 @@ import (
 // for any project repository implementation.
 type ProjectsRepo interface {
 	Init(conn *RepoConnection)
-	RetrieveProjects() []*models.Project
+
+	RetrieveProjects() ([]*models.Project, error)
+
+	RetrieveProjectByID(id string) (*models.Project, error)
+
 	StoreProject(p *models.Project)
 }
