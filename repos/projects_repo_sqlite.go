@@ -14,9 +14,6 @@ import (
 // path to the SQLite database file
 const sqliteDB = "./goings.sqlitedb"
 
-// locally reused for clean shutdown (uninit)
-var sqliteConn *RepoConnection
-
 // NewSqliteConnection creates a connection to SQLite database.
 func NewSqliteConnection() *RepoConnection {
 
@@ -26,15 +23,8 @@ func NewSqliteConnection() *RepoConnection {
 	}
 	repoConn := RepoConnection{DbConn: conn}
 	log.Printf("NewSqliteConnection > Connected to SQLite database ('%v').\n", sqliteDB)
-	sqliteConn = &repoConn
 	return &repoConn
 
-}
-
-// UninitSqliteConnection should be called in a graceful shutdown case.
-func UninitSqliteConnection() {
-	_ = sqliteConn.DbConn.Close()
-	log.Println("SQLite database connection closed.")
 }
 
 // ProjectsRepoSqlite is a Sqlite based implementation of ProjectsRepo.
@@ -76,6 +66,13 @@ func (repo *ProjectsRepoSqlite) Init(conn *RepoConnection) {
 	}
 	log.Printf("ProjectsRepoSqlite.Init > %d projects exist.", len(projects))
 
+}
+
+// Uninit is used during the graceful shutdown of the system.
+// It closes the database connection for now.
+func (repo *ProjectsRepoSqlite) Uninit() {
+	_ = repo.conn.DbConn.Close()
+	log.Println("ProjectsRepoSqlite.Uninit > SQLite database connection closed.")
 }
 
 // GetProjects returns the list (slice) of existing projects.

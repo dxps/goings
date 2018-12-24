@@ -14,4 +14,6 @@ type ProjectsRepo interface {
 	RetrieveProjectByID(id string) (*models.Project, error)
 
 	StoreProject(p *models.Project)
+
+	Uninit()
 }

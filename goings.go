@@ -5,6 +5,9 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
 	"go.isomorphicgo.org/go/isokit"
 
@@ -70,9 +73,11 @@ func main() {
 
 	router := mux.NewRouter()
 	registerRoutes(&env, router)
-
 	http.Handle("/", router)
-	http.ListenAndServe(":"+appServerPort, nil)
+
+	setupGracefulShutdown(&env)
+
+	_ = http.ListenAndServe(":"+appServerPort, nil)
 
 }
 
@@ -100,5 +105,24 @@ func registerRoutes(env *common.Env, r *mux.Router) {
 	http.Handle("/static/", http.StripPrefix("/static", fs))
 
 	log.Println("main.registerRoutes > Routes registered.")
+
+}
+
+func setupGracefulShutdown(env *common.Env) {
+
+	var stoplock sync.Mutex // protects stop
+	stop := false
+	stopChan := make(chan struct{}, 1)
+	signalChan := make(chan os.Signal, 1)
+	go func() {
+		<-signalChan
+		stoplock.Lock()
+		stop = true
+		stoplock.Unlock()
+		log.Println("main.gracefulShutdown > Shutting down ...")
+		stopChan <- struct{}{}
+		env.ProjectsRepo.Uninit()
+	}()
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 }
