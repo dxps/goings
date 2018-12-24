@@ -1,31 +1,36 @@
 package main
 
 import (
+	"github.com/gorilla/mux"
+	"github.com/vision8tech/goings/repos/sqlite"
+	"go.isomorphicgo.org/go/isokit"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
-
-	"go.isomorphicgo.org/go/isokit"
-
-	"github.com/gorilla/mux"
 
 	"github.com/vision8tech/goings/common"
 	"github.com/vision8tech/goings/handlers/api"
 	"github.com/vision8tech/goings/handlers/pages"
 	"github.com/vision8tech/goings/handlers/ui"
-	"github.com/vision8tech/goings/repos"
 	"github.com/vision8tech/goings/shared/templatefuncs"
 )
 
+// application settings
 var appMode string
 var appRoot string
 var appServerPort string
-var staticAssetsPath string
 
+// http server settings
+var server http.Server
+var staticAssetsPath string
+var idleConnsClosed chan struct{}
+
+//
+// init is used for the global application initialization.
+//
 func init() {
 
 	appMode = os.Getenv("GOINGS_APP_MODE")
@@ -34,18 +39,22 @@ func init() {
 	staticAssetsPath = appRoot + "/static"
 	log.SetFlags(log.Ldate | log.Lmicroseconds)
 	log.Printf("main.init > Env vars: GOINGS_APP_ROOT=%s GOINGS_APP_PORT=%s", appRoot, appServerPort)
+	idleConnsClosed = make(chan struct{})
 
 }
 
-// Initialization of the repositories.
+//
+// initRepos is initializing the repositories.
+//
 func initRepos(env *common.Env) {
 
-	var projectsRepo repos.ProjectsRepo = repos.NewSqliteProjectRepo()
-	env.ProjectsRepo = projectsRepo
+	env.ProjectsRepo = sqlite.NewSqliteProjectRepo()
 
 }
 
-// Initialization of the templates used in server-side rendering.
+//
+// initTemplateSet is initializing the templates used in server-side rendering cases.
+//
 func initTemplateSet(env *common.Env, generateStaticAssets bool) {
 
 	isokit.WebAppRoot = appRoot
@@ -65,6 +74,9 @@ func initTemplateSet(env *common.Env, generateStaticAssets bool) {
 
 }
 
+//
+// MAIN
+//
 func main() {
 
 	env := common.Env{}
@@ -75,54 +87,63 @@ func main() {
 	registerRoutes(&env, router)
 	http.Handle("/", router)
 
-	setupGracefulShutdown(&env)
+	setupGracefulShutdownActions(&env)
 
-	_ = http.ListenAndServe(":"+appServerPort, nil)
+	err := http.ListenAndServe(":"+appServerPort, nil)
+	if err != nil {
+		log.Printf("main > Error starting the http server: '%s'\n", err)
+	}
 
 }
 
+//
 // registerRoutes is responsible for registering the server-side request handlers
+//
 func registerRoutes(env *common.Env, r *mux.Router) {
 
 	// Standard/Initial requests handlers (for pages, not views)
 
 	r.Handle("/", pages.IndexPageHandler(env)).Methods("GET")
 
+	// --------------------------------------------------------------------------------------------
+
 	// UI (client-side) triggered request handlers
 
 	r.Handle("/template-bundle", ui.TemplateBundleHandler(env)).Methods("POST")
 
+	// --------------------------------------------------------------------------------------------
+
 	// API request handlers
 
-	r.Handle("/api/projects", api.GetProjectsAPIEndpoint(env)).Methods("GET")
-	r.Handle("/api/projects/{id}", api.GetProjectByIdAPIEndpoint(env)).Methods("GET")
-	r.Handle("/api/projects", api.SubmitProjectAPIEndpoint(env)).Methods("POST")
+	r.Handle("/api/projects", api.GetProjectsAPIHandler(env)).Methods(http.MethodGet)
+	r.Handle("/api/projects", api.SubmitProjectAPIHandler(env)).Methods(http.MethodPost)
+	r.Handle("/api/projects/{id}", api.GetProjectByIdAPIHandler(env)).Methods(http.MethodGet)
+	r.Handle("/api/projects/{id}", api.UpdateProjectAPIHandler(env)).Methods(http.MethodPut)
+	r.Handle("/api/projects/{id}", api.DeleteProjectAPIHandler(env)).Methods(http.MethodDelete)
 
-	// ----------------------------------------------------------------------
+	// --------------------------------------------------------------------------------------------
 
 	// static assets requests handlers
 	fs := http.FileServer(http.Dir(staticAssetsPath))
 	http.Handle("/static/", http.StripPrefix("/static", fs))
 
-	log.Println("main.registerRoutes > Routes registered.")
+	log.Println("main.registerRoutes > Routes ready.")
 
 }
 
-func setupGracefulShutdown(env *common.Env) {
+//
+// setupGracefulShutdownActions is setting up the actions in case of a graceful shutdown.
+//
+func setupGracefulShutdownActions(env *common.Env) {
 
-	var stoplock sync.Mutex // protects stop
-	stop := false
-	stopChan := make(chan struct{}, 1)
-	signalChan := make(chan os.Signal, 1)
+	var gracefulStopChan = make(chan os.Signal)
+	signal.Notify(gracefulStopChan, syscall.SIGTERM)
+	signal.Notify(gracefulStopChan, syscall.SIGINT)
 	go func() {
-		<-signalChan
-		stoplock.Lock()
-		stop = true
-		stoplock.Unlock()
-		log.Println("main.gracefulShutdown > Shutting down ...")
-		stopChan <- struct{}{}
+		sig := <-gracefulStopChan
+		log.Printf("main > Shutting down ('%+v' signal received) ...\n", sig)
 		env.ProjectsRepo.Uninit()
+		os.Exit(0)
 	}()
-	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
 
 }

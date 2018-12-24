@@ -9,5 +9,5 @@ import (
 type RepoConnection struct {
 
 	// database connection reference
-	DbConn *sql.DB
+	Db *sql.DB
 }
