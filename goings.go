@@ -2,7 +2,12 @@ package main
 
 import (
 	"github.com/gorilla/mux"
+	"github.com/vision8tech/goings/common"
+	"github.com/vision8tech/goings/handlers/api"
+	"github.com/vision8tech/goings/handlers/pages"
+	"github.com/vision8tech/goings/handlers/ui"
 	"github.com/vision8tech/goings/repos/sqlite"
+	"github.com/vision8tech/goings/shared/templatefuncs"
 	"go.isomorphicgo.org/go/isokit"
 	"html/template"
 	"log"
@@ -10,12 +15,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-
-	"github.com/vision8tech/goings/common"
-	"github.com/vision8tech/goings/handlers/api"
-	"github.com/vision8tech/goings/handlers/pages"
-	"github.com/vision8tech/goings/handlers/ui"
-	"github.com/vision8tech/goings/shared/templatefuncs"
 )
 
 // application settings
@@ -141,7 +140,7 @@ func setupGracefulShutdownActions(env *common.Env) {
 	signal.Notify(gracefulStopChan, syscall.SIGINT)
 	go func() {
 		sig := <-gracefulStopChan
-		log.Printf("main > Shutting down ('%+v' signal received) ...\n", sig)
+		log.Printf("\nmain > Shutting down ('%+v' signal received) ...\n", sig)
 		env.ProjectsRepo.Uninit()
 		os.Exit(0)
 	}()
